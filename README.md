@@ -130,69 +130,49 @@ actually rendered.
 
 ## Deploying on Render
 
-The repository ships with a `render.yaml` blueprint so you can stand up
-the service in a single click.
+📘 **For the full deployment walkthrough** (one-click Blueprint, manual
+Web Service, environment variables, troubleshooting, file references),
+see **[DEPLOY.md](./DEPLOY.md)**.
+
+A short summary:
+
+- Push the repo to GitHub (already done).
+- Open <https://dashboard.render.com/blueprints> → **New Blueprint Instance**
+  → pick `itransition-task2`. Render reads `render.yaml` and creates the
+  service.
+- Set the two secrets in the Environment tab: `FINNHUB_API_KEY` and
+  `RAILS_MASTER_KEY`.
+- Render runs:
+  ```
+  bundle config set --local without 'development test' &&
+  bundle install &&
+  bundle exec rake assets:precompile || true &&
+  mkdir -p public/assets &&
+  cp -f app/assets/stylesheets/application.css public/assets/application.css &&
+  cp -f app/assets/javascripts/application.js  public/assets/application.js
+  bundle exec puma -C config/puma.rb -e production
+  ```
+- The app becomes reachable at `https://stock-chart.onrender.com` once the
+  Live badge appears.
 
 ### One-shot Blueprint deploy (recommended)
 
-1. Go to <https://dashboard.render.com/select-repo> and connect this repo.
-2. Render finds `render.yaml` and shows what to provision:
-   ```
-   stock-chart (Web Service)
-   ├── Runtime:  Ruby 3.4
-   ├── Plan:     Free
-   ├── Branch:   main
-   ```
-   Apply. Render opens the service dashboard.
-3. **Environment → set the two secret env vars** (the rest are auto-set):
-   - `FINNHUB_API_KEY`  — your real Finnhub key
-   - `RAILS_MASTER_KEY` — paste contents of `config/master.key` (32 hex chars)
-4. Render triggers a fresh deploy. Watch the **Events** tab for:
-   ```
-   ==> Installing Ruby 3.4.4
-   ==> bundle install
-   ==> bundle exec rake assets:precompile || true
-   ==> cp app/assets/*.{css,js} public/assets/
-   ==> bundle exec puma -C config/puma.rb -e production
-   * Listening on tcp://0.0.0.0:10000
-   ```
-5. Once the **Live** badge appears, your app is reachable at
-   **`https://stock-chart.onrender.com`**.
-
-### Manual Web Service (alternative)
-
-If you skipped the Blueprint:
-
-| Setting          | Value                                                                |
-| ---------------- | -------------------------------------------------------------------- |
-| Runtime          | **Ruby**                                                             |
-| Build command    | `bundle config set --local without 'development test' && bundle install && bundle exec rake assets:precompile \|\| true && mkdir -p public/assets && cp -f app/assets/stylesheets/application.css public/assets/application.css && cp -f app/assets/javascripts/application.js public/assets/application.js` |
-| Start command    | `bundle exec puma -C config/puma.rb -e production`                    |
-| Health check path| `/`                                                                   |
-| Env vars         | `RAILS_ENV=production`, `RAILS_SERVE_STATIC_FILES=true`, `RAILS_LOG_TO_STDOUT=true`, `RAILS_MASTER_KEY=<contents of master.key>`, `FINNHUB_API_KEY=<your key>`, `FINNHUB_DEMO=0` |
-
-### Notes
-
-- **No database** — the app is stateless, so no Postgres to add.
-- **Free tier behavior** — Render spins down the service after ~15 min of
-  inactivity. The first request after that takes ~30s to wake up. Upgrade to
-  the `starter` plan ($7/mo) to keep it always-on.
-- **Custom domain** — Render auto-provisions `https://<service-name>.onrender.com`;
-  bring your own via the Custom Domains tab.
-
----
+See **[DEPLOY.md](./DEPLOY.md)** for the complete walkthrough, including
+the manual Web Service path, environment-variable reference, troubleshooting
+matrix, and Free-tier behaviour notes.
 
 ## Project layout
 
 ```
 ./
+├── README.md                 # This file — quick reference
+├── DEPLOY.md                 # How to deploy on Render
 ├── .env.example              # Template — copy to .env and edit
 ├── .gitignore                # Excludes .env, logs, tmp, generated assets, etc.
-├── README.md                 # This file
 ├── start.sh                  # Local launcher with .env loading
 ├── render.yaml               # Render Blueprint (one-click deploy)
-├── Gemfile + Gemfile.lock    # Ruby 3.4.4 + Rails 8.1
 ├── Procfile                  # Render / Heroku start command
+├── Gemfile + Gemfile.lock    # ruby ">= 3.4.0" + Rails 8.1
 ├── app/
 │   ├── controllers/
 │   │   ├── application_controller.rb
@@ -205,3 +185,5 @@ If you skipped the Blueprint:
 ├── config/                    # application.rb, routes.rb, puma.rb, cors.rb, environments, etc.
 └── log/, tmp/, storage/       # Standard Rails runtime dirs (gitignored)
 ```
+
+For a step-by-step Render walkthrough, see **[DEPLOY.md](./DEPLOY.md)**.
