@@ -8,20 +8,20 @@
 *.swo
 
 # Anything Rails generates that we don't want version-controlled.
-stock_chart/log/*
-stock_chart/tmp/*
-stock_chart/storage/*
-stock_chart/vendor/*
-stock_chart/.bundle/
+log/*
+tmp/*
+storage/*
+vendor/*
+.bundle/
 
 # The shipped static-asset copies (we regenerate them in start.sh).
-stock_chart/public/assets/
+public/assets/
 
 # Local env file — the .env.example is committed, the real .env is not.
-stock_chart/.env
-stock_chart/.env.*
-!stock_chart/.env.example
+.env
+.env.*
+!.env.example
 
 # Keep the lockfile (Gemfile.lock) and credentials.yml.enc; just don't
 # leak secrets via the master.key.
-stock_chart/config/master.key
+config/master.key

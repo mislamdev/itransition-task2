@@ -14,5 +14,5 @@ gem "rack-cors"
 gem "dotenv-rails", groups: [:development, :test]
 
 group :development, :test do
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  gem "debug", platforms: %i[ mri windows ]
 end

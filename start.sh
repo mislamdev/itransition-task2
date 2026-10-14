@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # Convenience launcher for local development.
 #
-# Configuration is read from `stock_chart/.env` (created from
-# `.env.example` on first run).  Anything you export in the shell
-# BEFORE running this script overrides what's in .env — that's how
-# dotenv works.
+# Configuration is read from `.env` (created from `.env.example` on first
+# run).  Anything you export in the shell BEFORE running this script
+# overrides what's in .env — that's how dotenv works.
 #
 # Typical use:
-#   1. cp stock_chart/.env.example stock_chart/.env
-#   2. Edit stock_chart/.env and put your real FINNHUB_API_KEY in it.
+#   1. cp .env.example .env
+#   2. Edit .env and put your real FINNHUB_API_KEY in it.
 #   3. ./start.sh           # serves on 0.0.0.0:3000 (LAN-reachable)
 #
 # Optional flags:
@@ -21,9 +20,11 @@
 
 set -euo pipefail
 
-APP_ROOT="$(cd "$(dirname "$0")" && pwd)/stock_chart"
+# Repository root = directory this script lives in.
+APP_ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$APP_ROOT"
 
-# Detect a usable Ruby: prefer Homebrew Ruby (>= 3.0 needed for Rails 8),
+# Detect a usable Ruby: prefer Homebrew Ruby (>= 3.4 needed for Rails 8),
 # fall back to whatever is on PATH.
 RUBY=""
 if [ -x "/opt/homebrew/opt/ruby/bin/ruby" ]; then
@@ -40,8 +41,6 @@ fi
 # user-installed `bundle` are reachable.
 export PATH="$(dirname "$RUBY"):$HOME/.gem/ruby/4.0.0/bin:$PATH"
 
-cd "$APP_ROOT"
-
 # Copy the current CSS/JS from app/assets/* into public/assets/ so they
 # are served by Rack's static-file middleware (Rails 8 minimal — no
 # asset pipeline).  Cheap enough to do on every boot.
@@ -56,7 +55,7 @@ if [ ! -f .env ]; then
 fi
 
 # Load .env into the current shell so we can show what's configured.
-# dotenv-rails will do the same inside Rails, but values printed here
+# dotenv-rails does the same inside Rails, but the values printed here
 # come from this shell read.
 set -a
 # shellcheck disable=SC1091
@@ -75,9 +74,8 @@ while [ "$#" -gt 0 ]; do
       cat <<EOF
 Usage: ./start.sh [--loopback] [--port 3000]
 
-Configuration is read from stock_chart/.env (see .env.example).
+Configuration is read from .env (see .env.example).
 Shell env overrides .env values.
-
 EOF
       exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
@@ -90,7 +88,7 @@ if [ -n "${FINNHUB_DEMO:-}" ] && [ "${FINNHUB_DEMO}" != "0" ]; then
 fi
 if [ -z "${FINNHUB_API_KEY:-}" ] || [ "${FINNHUB_API_KEY}" = "demo" ] || [ "${FINNHUB_API_KEY}" = "your_finnhub_api_key_here" ]; then
   echo "==> FINNHUB_API_KEY is not set (or is the demo placeholder);" >&2
-  echo "    live calls will fail until you edit stock_chart/.env." >&2
+  echo "    live calls will fail until you edit .env." >&2
 fi
 echo "==> FINNHUB_API_KEY prefix: ${FINNHUB_API_KEY:0:4}****"
 echo "==> BIND=$BIND  PORT=$PORT"

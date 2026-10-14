@@ -4,8 +4,8 @@ Task 3.5 (Ruby group). A minimal one-page web application that lets the user
 type a stock symbol (or company name) into an autocomplete field and view an
 interactive candlestick / area chart with several date ranges.
 
-Built with **Ruby on Rails 8.1**, **ApexCharts** (CDN), and **Finnhub** as the
-data source.
+Built with **Ruby on Rails 8.1**, **lightweight-charts** (TradingView's
+open-source charting library), and **Finnhub** as the data source.
 
 ---
 
@@ -17,39 +17,39 @@ data source.
   - candlestick view (green up / red down)
   - area (line) view
   - 8 date ranges: **1D, 5D, 1W, 1M, 3M, 6M, 1Y, 5Y**
-  - built-in **zoom, pan, drag-to-select** (powered by ApexCharts)
-  - **crosshair**, tooltips, range-reset toolbar
+  - built-in **zoom, pan, drag-to-select** (powered by lightweight-charts)
+  - touch-friendly crosshair and tooltip
 - Live **quote summary** (current price, day change, % change, currency).
-- **Mobile-friendly** layout with a responsive header/controls,
-  44 px tap targets, `viewport-fit=cover`, and touch-friendly chart.
+- **Mobile-responsive** layout with a responsive header/controls,
+  44 px tap targets, `viewport-fit=cover`.
 - **Dark theme** that reads well on desktop and mobile.
 - The Finnhub API key is kept **server-side**; the browser only talks to
-  `/api/*` proxy endpoints. The API key never leaks into JavaScript.
+  `/api/*` proxy endpoints.  The API key never leaks into JavaScript.
 
 ---
 
-## Quick start
+## Quick start (local)
 
 ```bash
-# 1. Install Ruby (any 3.x or newer) and Bundler.
+# 1. Install Ruby 3.4.x or newer (Homebrew's `ruby` formula ships 4.0.x
+#    which is also fine; Render ships 3.4.4 by default).
 
-# 2. Get a free API key from https://finnhub.io/dashboard
+# 2. Get a free API key from https://finnhub.io/dashboard (free tier:
+#    60 calls/min, includes /search and /quote; restricts /stock/candle).
 
 # 3. Configure once via .env (no shell exports needed afterwards):
-cp stock_chart/.env.example stock_chart/.env
-# Edit stock_chart/.env and set FINNHUB_API_KEY=your_real_key
+cp .env.example .env
+# Edit .env and set FINNHUB_API_KEY=your_real_key_from_finnhub
 
 # 4. Install gems and boot:
-cd stock_chart
 bundle install
-../start.sh
+./start.sh
 # Server is reachable at http://<your-ip>:3000/
 ```
 
-`start.sh` reads `stock_chart/.env` (using `dotenv-rails`) so you don't
-have to export environment variables every time you boot. **Anything you
-export in the shell still overrides `.env`.** The script also prints a
-quick status summary so you know which mode the server is in.
+`start.sh` reads `.env` (using `dotenv-rails`) so you don't have to
+export environment variables every time you boot. **Anything you
+export in the shell still overrides `.env`.**
 
 `start.sh` accepts a few optional flags:
 
@@ -61,8 +61,7 @@ quick status summary so you know which mode the server is in.
 
 ### `.env` reference
 
-The `.env` file lives at `stock_chart/.env` (git-ignored).  See
-`stock_chart/.env.example` for the template.
+See `.env.example` for the template.  The real `.env` is git-ignored.
 
 | Variable             | Default      | Notes                                                    |
 | -------------------- | ------------ | -------------------------------------------------------- |
@@ -74,64 +73,11 @@ The `.env` file lives at `stock_chart/.env` (git-ignored).  See
 ### Manual start (without `start.sh`)
 
 ```bash
-cd stock_chart
+bundle install
 bundle exec puma -C config/puma.rb -b tcp://0.0.0.0:3000
-# FINNHUB_API_KEY etc. come from .env automatically (via dotenv-rails)
-# or you can export them in your shell to override.
+# FINNHUB_API_KEY etc. come from .env automatically (via dotenv-rails).
+# Export them in your shell to override.
 ```
-
----
-
-## Deploying on Render
-
-The repository ships with a `render.yaml` blueprint so you can stand up
-the service in a single click from the Render dashboard.
-
-### One-shot Blueprint deploy (recommended)
-
-1. Go to <https://dashboard.render.com/select-repo> and connect this
-   repository.
-2. Render asks for a **Blueprint** — point it at this repo; it will
-   read `render.yaml` and offer to provision a single Web Service
-   called `stock-chart` (Ruby 3.4, free tier, Oregon region).
-3. In the Environment page that opens for the new service, set the
-   two secret env vars:
-   - `FINNHUB_API_KEY` — your real Finnhub key
-   - `RAILS_MASTER_KEY`  — contents of `stock_chart/config/master.key`
-4. Click **Deploy**. Render runs:
-   ```
-   bundle install --without development test
-   bundle exec rake assets:precompile
-   cp app/assets/*.{css,js} public/assets/
-   bundle exec puma -C config/puma.rb -e production
-   ```
-
-### Manual Web Service (alternative)
-
-If you prefer to set up the service without `render.yaml`:
-
-| Setting          | Value                                                                |
-| ---------------- | -------------------------------------------------------------------- |
-| Runtime          | **Ruby**                                                             |
-| Root directory   | `stock_chart`                                                         |
-| Build command    | `bundle config set --local without 'development test' && bundle install && bundle exec rake assets:precompile \|\| true && mkdir -p public/assets && cp -f app/assets/stylesheets/application.css public/assets/application.css && cp -f app/assets/javascripts/application.js public/assets/application.js` |
-| Start command    | `bundle exec puma -C config/puma.rb -e production`                    |
-| Health check path| `/`                                                                   |
-| Env vars         | `RAILS_ENV=production`, `RAILS_SERVE_STATIC_FILES=true`, `RAILS_LOG_TO_STDOUT=true`, `RAILS_MASTER_KEY=<contents of master.key>`, `FINNHUB_API_KEY=<your key>`, `FINNHUB_DEMO=0` |
-
-### Custom domain
-
-Render auto-provisions `https://<service-name>.onrender.com`.  Bring
-your own domain on the *Custom Domains* tab of the service.
-
-### Notes
-
-- The app has no database — nothing to migrate, no Postgres to add.
-- The `Procfile` defines `web: bundle exec puma -C config/puma.rb -e
-  production`.  Render detects this automatically.
-- `dotenv-rails` is development/test only; production reads ENV directly.
-- If `FINNHUB_DEMO=1` is ever set on Render, the page renders synthetic
-  data and shows the yellow "Demo mode active" banner.
 
 ---
 
@@ -150,59 +96,88 @@ your own domain on the *Custom Domains* tab of the service.
 Static assets (`/assets/application.css`, `/assets/application.js`) are served
 directly from `public/assets/`, no asset pipeline required.
 
-The full controller lives in `stock_chart/app/controllers/stocks_controller.rb`.
+The full controller lives in `app/controllers/stocks_controller.rb`.
 
 ### Frontend
 
 - `app/views/stocks/index.html.erb` — the single-page layout.
-- `public/assets/application.css`  — all styling (dark theme, responsive).
-- `public/assets/application.js`   — autocompletion, chart rendering,
+- `app/assets/stylesheets/application.css`  — dark theme, responsive.
+- `app/assets/javascripts/application.js`   — autocomplete, chart rendering,
   range / chart-type switching, URL-state persistence.
 
-ApexCharts is loaded from `cdn.jsdelivr.net` — no build step, no bundler.
+`lightweight-charts` is loaded from `unpkg.com` — no build step, no bundler.
 
-### Errors / failure modes
+### Modes
 
-- **Missing or invalid API key** → upstream JSON has `{"error":"Invalid API
-  key."}`; the chart shows the message under it instead of failing silently.
-- **Ticker with no data on the chosen range** → the chart shows "No data
-  available for SYMBOL on the RANGE range" and the empty-state hint returns.
-- **Network errors** → status line under the chart names the error.
+- **Default** (no `FINNHUB_DEMO`) goes to real Finnhub and surfaces upstream
+  errors verbatim. If the user's account tier blocks `/stock/candle` (403),
+  the controller transparently falls back to synthetic demo data so the
+  chart still draws, with a status line that explains the fallback.
+- **`FINNHUB_DEMO=1`** forces synthetic data for every endpoint; the page
+  shows a yellow **"Demo mode active"** banner so it's never mistaken for
+  live data.
 
-### Demo mode (no API key required for trying it out)
+### Intraday resolution auto-downgrade
 
-If `FINNHUB_API_KEY` is unset or set to `"demo"`, the app **does not call
-Finnhub at all** — it returns a small set of synthetic, deterministic
-OHLC + quote data so the chart, autocomplete, and quote summary are all
-fully functional. The synthetic walk is the same for every symbol on the
-same minute, which makes it ideal for trying the UI quickly without
-signing up for an API key.
-
-To **enable real data**, set `FINNHUB_API_KEY` to your real key from
-https://finnhub.io:
-
-```bash
-FINNHUB_API_KEY=xxxxxxxxxxxxxxxxxxxx ./start.sh
-```
-
-With a real key on the **free tier**, intraday resolutions (1D, 5D, 1W)
-may come back empty because Finnhub reserves 1/5/15/30/60-minute data
-for paid customers. The app handles this automatically — if a finer
-resolution returns no data it falls back to a coarser one (daily, then
-weekly, etc.) and the status line under the chart tells you which
-resolution was used.
+Finnhub's free tier doesn't include 1/5/15/30/60-minute data for any
+symbol.  When the controller requests intraday bars and gets nothing back,
+it walks down to daily bars (then weekly, then monthly) until it finds
+something.  The status line under the chart tells the user which resolution
+actually rendered.
 
 ---
 
-## Deployment notes
+## Deploying on Render
 
-- `RAILS_ENV=production` works out of the box once you have a real
-  `RAILS_MASTER_KEY` (already provisioned), or you can run in development.
-- For HTTPS / real hosting, put the app behind any standard reverse proxy
-  (nginx, Caddy, fly.io's proxy, etc.). Override `PORT` and `BIND` via env.
-- A free-tier **Finnhub** key allows 60 API calls / minute and is plenty
-  for a demo. If you hit the limit the upstream will reply with 429 and
-  the chart status line will show "Too Many Requests".
+The repository ships with a `render.yaml` blueprint so you can stand up
+the service in a single click.
+
+### One-shot Blueprint deploy (recommended)
+
+1. Go to <https://dashboard.render.com/select-repo> and connect this repo.
+2. Render finds `render.yaml` and shows what to provision:
+   ```
+   stock-chart (Web Service)
+   ├── Runtime:  Ruby 3.4
+   ├── Plan:     Free
+   ├── Branch:   main
+   ```
+   Apply. Render opens the service dashboard.
+3. **Environment → set the two secret env vars** (the rest are auto-set):
+   - `FINNHUB_API_KEY`  — your real Finnhub key
+   - `RAILS_MASTER_KEY` — paste contents of `config/master.key` (32 hex chars)
+4. Render triggers a fresh deploy. Watch the **Events** tab for:
+   ```
+   ==> Installing Ruby 3.4.4
+   ==> bundle install
+   ==> bundle exec rake assets:precompile || true
+   ==> cp app/assets/*.{css,js} public/assets/
+   ==> bundle exec puma -C config/puma.rb -e production
+   * Listening on tcp://0.0.0.0:10000
+   ```
+5. Once the **Live** badge appears, your app is reachable at
+   **`https://stock-chart.onrender.com`**.
+
+### Manual Web Service (alternative)
+
+If you skipped the Blueprint:
+
+| Setting          | Value                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Runtime          | **Ruby**                                                             |
+| Build command    | `bundle config set --local without 'development test' && bundle install && bundle exec rake assets:precompile \|\| true && mkdir -p public/assets && cp -f app/assets/stylesheets/application.css public/assets/application.css && cp -f app/assets/javascripts/application.js public/assets/application.js` |
+| Start command    | `bundle exec puma -C config/puma.rb -e production`                    |
+| Health check path| `/`                                                                   |
+| Env vars         | `RAILS_ENV=production`, `RAILS_SERVE_STATIC_FILES=true`, `RAILS_LOG_TO_STDOUT=true`, `RAILS_MASTER_KEY=<contents of master.key>`, `FINNHUB_API_KEY=<your key>`, `FINNHUB_DEMO=0` |
+
+### Notes
+
+- **No database** — the app is stateless, so no Postgres to add.
+- **Free tier behavior** — Render spins down the service after ~15 min of
+  inactivity. The first request after that takes ~30s to wake up. Upgrade to
+  the `starter` plan ($7/mo) to keep it always-on.
+- **Custom domain** — Render auto-provisions `https://<service-name>.onrender.com`;
+  bring your own via the Custom Domains tab.
 
 ---
 
@@ -210,25 +185,22 @@ resolution was used.
 
 ```
 ./
-├── start.sh                          # Convenience launcher
-├── README.md                         # This file
-└── stock_chart/                      # Rails application
-    ├── Gemfile
-    ├── config/
-    │   ├── application.rb           # api_only = false so we can render ERB
-    │   ├── routes.rb                # routes root + /api/*
-    │   ├── puma.rb                  # binds on $BIND:$PORT (default 0.0.0.0:3000)
-    │   └── initializers/cors.rb     # permissive CORS for the JSON API
-    ├── app/
-    │   ├── controllers/
-    │   │   ├── application_controller.rb
-    │   │   └── stocks_controller.rb  # The proxy + asset-serving actions
-    │   └── views/
-    │       └── stocks/
-    │           └── index.html.erb   # The single page
-    ├── public/
-    │   └── assets/
-    │       ├── application.css
-    │       └── application.js
-    └── ...
+├── .env.example              # Template — copy to .env and edit
+├── .gitignore                # Excludes .env, logs, tmp, generated assets, etc.
+├── README.md                 # This file
+├── start.sh                  # Local launcher with .env loading
+├── render.yaml               # Render Blueprint (one-click deploy)
+├── Gemfile + Gemfile.lock    # Ruby 3.4.4 + Rails 8.1
+├── Procfile                  # Render / Heroku start command
+├── app/
+│   ├── controllers/
+│   │   ├── application_controller.rb
+│   │   └── stocks_controller.rb   # The proxy + helper methods
+│   ├── views/stocks/index.html.erb
+│   └── assets/
+│       ├── stylesheets/application.css
+│       └── javascripts/application.js
+├── public/assets/             # Mirrored from app/assets/* on each start.sh boot
+├── config/                    # application.rb, routes.rb, puma.rb, cors.rb, environments, etc.
+└── log/, tmp/, storage/       # Standard Rails runtime dirs (gitignored)
 ```
