@@ -19,7 +19,7 @@ services:
     buildCommand: |
       bundle config set --local without 'development test' &&
       bundle install &&
-      bundle exec rake assets:precompile || true &&
+      bundle exec rake assets:precompile &&
       mkdir -p public/assets &&
       cp -f app/assets/stylesheets/application.css public/assets/application.css &&
       cp -f app/assets/javascripts/application.js  public/assets/application.js

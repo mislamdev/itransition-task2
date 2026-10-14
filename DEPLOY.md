@@ -167,7 +167,9 @@ And `config/puma.rb` binds Puma to `$BIND:$PORT` — Render sets
 | ------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------- |
 | `Could not locate Gemfile`                       | Render build ran at repo root but found no `Gemfile`.      | Make sure your repo is **flat** (Gemfile at root).             |
 | `Your Ruby version is X, but your Gemfile specified Y` | `.ruby-version`/`Gemfile` pinned to a version not on Render. | Use `ruby ">= 3.4.0"` in `Gemfile` (Render ships 4.0.x).     |
+| `Cannot write a changed lockfile while frozen`    | `Gemfile.lock` only lists the developer's platform, so bundler under Render's `--frozen` mode tries to add `x86_64-linux` and fails. | Run `bundle lock --add-platform x86_64-linux` locally and commit the updated `Gemfile.lock`. |
 | `bundler: command not found`                     | Render default Ruby build image strips dev gems.           | Run with `bundle config set --local without 'development test'`. |
+| `Don't know how to build task 'assets:precompile'`/`assets:clean` | Minimal Rails app has no asset-pipeline tasks. | `lib/tasks/assets.rake` defines no-op tasks. Our static assets are copied by the build step's `cp` command. |
 | `Missing RAILS_MASTER_KEY`                       | Plaintext credentials file can't be decrypted.             | Set `RAILS_MASTER_KEY` env var to the 32-hex-char contents of `config/master.key`. |
 | `favicon.ico` 404                                | Rails default route file doesn't ship one.                  | Harmless; either add one or ignore.                            |
 | `No data for XAU.TO on the 1D range.`            | Finnhub free tier blocks intraday resolutions.              | Use `1M+` ranges, or upgrade Finnhub tier.                     |
