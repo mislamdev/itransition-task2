@@ -1,6 +1,9 @@
 source "https://rubygems.org"
 
-ruby "3.4.4"
+# Ruby 3.4.x or 4.x — both are supported by every gem we use.  Render's
+# default Ruby build image updates independently of this file, so we
+# accept anything >= 3.4 to stay forward-compatible.
+ruby ">= 3.4.0"
 
 gem "rails", "~> 8.1.4"
 gem "puma", ">= 5.0"

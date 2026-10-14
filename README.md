@@ -31,8 +31,8 @@ open-source charting library), and **Finnhub** as the data source.
 ## Quick start (local)
 
 ```bash
-# 1. Install Ruby 3.4.x or newer (Homebrew's `ruby` formula ships 4.0.x
-#    which is also fine; Render ships 3.4.4 by default).
+# 1. Install Ruby 3.4.x or 4.x (Homebrew's `ruby` formula ships 4.0.x;
+#    Render's native Ruby runtime is now 4.0.x as of 2026).
 
 # 2. Get a free API key from https://finnhub.io/dashboard (free tier:
 #    60 calls/min, includes /search and /quote; restricts /stock/candle).
@@ -44,6 +44,7 @@ cp .env.example .env
 # 4. Install gems and boot:
 bundle install
 ./start.sh
+# (Gemfile pins `ruby ">= 3.4.0"`; works on 3.4.x and 4.x.)
 # Server is reachable at http://<your-ip>:3000/
 ```
 
