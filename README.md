@@ -82,6 +82,59 @@ bundle exec puma -C config/puma.rb -b tcp://0.0.0.0:3000
 
 ---
 
+## Deploying on Render
+
+The repository ships with a `render.yaml` blueprint so you can stand up
+the service in a single click from the Render dashboard.
+
+### One-shot Blueprint deploy (recommended)
+
+1. Go to <https://dashboard.render.com/select-repo> and connect this
+   repository.
+2. Render asks for a **Blueprint** — point it at this repo; it will
+   read `render.yaml` and offer to provision a single Web Service
+   called `stock-chart` (Ruby 3.4, free tier, Oregon region).
+3. In the Environment page that opens for the new service, set the
+   two secret env vars:
+   - `FINNHUB_API_KEY` — your real Finnhub key
+   - `RAILS_MASTER_KEY`  — contents of `stock_chart/config/master.key`
+4. Click **Deploy**. Render runs:
+   ```
+   bundle install --without development test
+   bundle exec rake assets:precompile
+   cp app/assets/*.{css,js} public/assets/
+   bundle exec puma -C config/puma.rb -e production
+   ```
+
+### Manual Web Service (alternative)
+
+If you prefer to set up the service without `render.yaml`:
+
+| Setting          | Value                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Runtime          | **Ruby**                                                             |
+| Root directory   | `stock_chart`                                                         |
+| Build command    | `bundle config set --local without 'development test' && bundle install && bundle exec rake assets:precompile \|\| true && mkdir -p public/assets && cp -f app/assets/stylesheets/application.css public/assets/application.css && cp -f app/assets/javascripts/application.js public/assets/application.js` |
+| Start command    | `bundle exec puma -C config/puma.rb -e production`                    |
+| Health check path| `/`                                                                   |
+| Env vars         | `RAILS_ENV=production`, `RAILS_SERVE_STATIC_FILES=true`, `RAILS_LOG_TO_STDOUT=true`, `RAILS_MASTER_KEY=<contents of master.key>`, `FINNHUB_API_KEY=<your key>`, `FINNHUB_DEMO=0` |
+
+### Custom domain
+
+Render auto-provisions `https://<service-name>.onrender.com`.  Bring
+your own domain on the *Custom Domains* tab of the service.
+
+### Notes
+
+- The app has no database — nothing to migrate, no Postgres to add.
+- The `Procfile` defines `web: bundle exec puma -C config/puma.rb -e
+  production`.  Render detects this automatically.
+- `dotenv-rails` is development/test only; production reads ENV directly.
+- If `FINNHUB_DEMO=1` is ever set on Render, the page renders synthetic
+  data and shows the yellow "Demo mode active" banner.
+
+---
+
 ## How it works
 
 ### Backend (Rails 8.1)

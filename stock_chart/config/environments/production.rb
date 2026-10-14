@@ -47,12 +47,10 @@ Rails.application.configure do
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Allow requests from any host.  This is safe for our use case — the app
+  # is a stateless proxy that doesn't render user-specific HTML based on
+  # the Host header, so DNS-rebinding attacks have no vector.  Render
+  # terminates TLS and the request reaches Puma with an internal host
+  # name we can't predict from here.
+  config.hosts.clear
 end

@@ -1,0 +1,45 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# This file lets you spin up the entire Stock Chart service on Render by
+# pointing the dashboard at it (New → Blueprint → pick this repo). It
+# declares a single Web Service running Puma. No database is needed
+# because the app is a stateless proxy to Finnhub.
+#
+# Secrets (FINNHUB_API_KEY, RAILS_MASTER_KEY) are pulled from the Render
+# dashboard "Environment" page — set them once and they stay out of
+# source control.
+
+services:
+  - type: web
+    name: stock-chart
+    runtime: ruby
+    rootDir: stock_chart
+    plan: free                # change to "starter" or higher for production
+    region: oregon
+    branch: main
+    buildCommand: |
+      bundle config set --local without 'development test' &&
+      bundle install &&
+      bundle exec rake assets:precompile || true &&
+      mkdir -p public/assets &&
+      cp -f app/assets/stylesheets/application.css public/assets/application.css &&
+      cp -f app/assets/javascripts/application.js  public/assets/application.js
+    startCommand: bundle exec puma -C config/puma.rb -e production
+    healthCheckPath: /
+    autoDeploy: true
+
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_SERVE_STATIC_FILES
+        value: "true"
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: RAILS_MASTER_KEY
+        sync: false            # paste from stock_chart/config/master.key
+      - key: FINNHUB_API_KEY
+        sync: false            # paste your real Finnhub key
+      - key: FINNHUB_DEMO
+        value: "0"
