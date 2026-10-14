@@ -1,0 +1,16 @@
+source "https://rubygems.org"
+
+gem "rails", "~> 8.1.4"
+gem "puma", ">= 5.0"
+
+gem "tzinfo-data", platforms: %i[ windows jruby ]
+gem "rack-cors"
+
+# Loads .env from the project root before the rest of the app boots, so
+# ENV["FINNHUB_API_KEY"] / FINNHUB_DEMO / BIND / PORT are available
+# without exporting them in every shell.
+gem "dotenv-rails", groups: [:development, :test]
+
+group :development, :test do
+  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+end

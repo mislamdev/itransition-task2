@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Stock chart single-page application: search a ticker, view an interactive candlestick/line chart and explore date ranges.">
+  <title>Stock Chart · Ruby on Rails</title>
+
+  <!-- Preconnect to CDN so ApexCharts loads faster on first paint. -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <!-- ApexCharts CSS removed; using lightweight-charts (TradingView) for
+       candlestick rendering. See application.js. -->
+  <script defer src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="/assets/application.css" media="all">
+</head>
+<body>
+  <% if ENV["FINNHUB_DEMO"].to_s.strip.downcase.in?(%w[1 true yes on]) %>
+    <div class="demo-banner" role="status">
+      🧪 <strong>Demo mode active</strong> — synthetic data, not real tickers.  Run with your real <code>FINNHUB_API_KEY</code> to see live prices.
+    </div>
+  <% end %>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">▲</span>
+      <h1>Stock&nbsp;Chart</h1>
+      <span class="brand-sub">powered by Ruby on Rails + Finnhub</span>
+    </div>
+    <a class="header-link" href="#" id="popular-link" aria-label="Show popular tickers">Popular ▾</a>
+  </header>
+
+  <main class="app-main">
+    <section class="controls" aria-label="Chart controls">
+      <form id="symbol-form" class="symbol-form" autocomplete="off" role="search">
+        <label class="sr-only" for="symbol-input">Stock symbol or company name</label>
+        <div class="combobox" data-combobox>
+          <input
+            id="symbol-input"
+            name="q"
+            type="text"
+            placeholder="Search a ticker or company (e.g. AAPL or Apple)…"
+            inputmode="search"
+            autocapitalize="characters"
+            spellcheck="false"
+            aria-autocomplete="list"
+            aria-controls="symbol-listbox"
+            aria-expanded="false">
+            <ul id="symbol-listbox" class="combobox-list" role="listbox" hidden></ul>
+        </div>
+        <button type="submit" class="primary-btn">Show chart</button>
+      </form>
+
+      <div class="range-and-extra">
+        <div class="range-buttons" role="tablist" aria-label="Date range">
+          <% %w[1D 5D 1W 1M 3M 6M 1Y 5Y].each_with_index do |r, i| %>
+            <button
+              type="button"
+              role="tab"
+              class="range-btn <%= 'is-active' if r == '1M' %>"
+              data-range="<%= r %>"
+              aria-selected="<%= r == '1M' %>"><%= r %></button>
+          <% end %>
+        </div>
+
+        <div class="chart-type" role="radiogroup" aria-label="Chart type">
+          <button type="button" class="chart-type-btn is-active" data-type="candlestick" role="radio" aria-checked="true">Candles</button>
+          <button type="button" class="chart-type-btn"           data-type="area"       role="radio" aria-checked="false">Area</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="quote-summary" id="quote-summary" hidden aria-live="polite">
+      <div class="quote-symbol">
+        <span class="quote-symbol-text" id="quote-symbol">—</span>
+        <span class="quote-name" id="quote-name">—</span>
+      </div>
+      <div class="quote-price" id="quote-price">—</div>
+      <div class="quote-change" id="quote-change">—</div>
+    </section>
+
+    <section class="chart-shell" aria-label="Price chart">
+      <div id="chart"></div>
+      <div class="chart-empty" id="chart-empty">
+        <p>Start by searching for a stock above.</p>
+        <p class="muted">Try <button type="button" class="chip" data-symbol="AAPL">AAPL</button>
+                       <button type="button" class="chip" data-symbol="MSFT">MSFT</button>
+                       <button type="button" class="chip" data-symbol="TSLA">TSLA</button>
+                       <button type="button" class="chip" data-symbol="NVDA">NVDA</button>
+                       <button type="button" class="chip" data-symbol="GOOGL">GOOGL</button></p>
+      </div>
+    </section>
+
+    <p class="chart-status" id="chart-status" aria-live="polite"></p>
+  </main>
+
+  <footer class="app-footer">
+    <span>Data via <a href="https://finnhub.io" target="_blank" rel="noopener">Finnhub</a>. Quotes may be delayed.</span>
+  </footer>
+
+  <script src="/assets/application.js" defer></script>
+</body>
+</html>
