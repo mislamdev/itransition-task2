@@ -28,12 +28,11 @@
 threads_count = ENV.fetch("RAILS_MAX_THREADS", 3)
 threads threads_count, threads_count
 
-# Specifies where Puma listens. We use `bind` *and* env-controlled port so
-# the same config works for production. For remote access during local
-# dev, pass `-b 0.0.0.0` on the Rails CLI — `bin/rails server` does not
-# honour bind directives from puma.rb in Rails 8.
+# Specifies where Puma listens. Render sets PORT=10000 automatically;
+# locally PORT defaults to 3000. Use `bind` only — having both `bind`
+# and `port` here causes Puma to try to listen twice on the same
+# socket (Errno::EADDRINUSE on Render).
 bind "tcp://#{ENV.fetch('BIND', '0.0.0.0')}:#{ENV.fetch('PORT', 3000)}"
-port  ENV.fetch('PORT', 3000)
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
